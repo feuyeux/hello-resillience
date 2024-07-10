@@ -1,4 +1,4 @@
-# hello-resillience
+# hello-resilience
 
 Microservices Resilience Patterns
 | Pattern | Description |Implement|
@@ -8,7 +8,7 @@ Microservices Resilience Patterns
 | Retry (with Statelessness and Idempotence) |https://learn.microsoft.com/en-us/azure/architecture/patterns/retry|https://resilience4j.readme.io/docs/examples-5|
 | Bulkhead |https://learn.microsoft.com/en-us/azure/architecture/patterns/bulkhead|https://resilience4j.readme.io/docs/examples-3|
 
-```
+```xml
 <dependency>
     <groupId>io.github.resilience4j</groupId>
     <artifactId>resilience4j-circuitbreaker</artifactId>
