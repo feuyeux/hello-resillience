@@ -126,23 +126,18 @@ public class HelloResilienceApplicationTests {
     @Test
     public void rateLimiting() throws InterruptedException {
         TimeUnit.MICROSECONDS.sleep(100);
-        Stream.rangeClosed(1, 5).forEach((count) -> {
+        Stream.rangeClosed(1, 20).forEach((count) -> {
             ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_A + "/limit", String.class);
             HttpStatusCode statusCode = response.getStatusCode();
             String body = response.getBody();
             log.info("[{}] statusCode:{},body:{}", count, statusCode, body);
+            if (count == 5) {
+                assertThat(statusCode).isEqualTo(HttpStatus.OK);
+            }
+            if (count == 12) {
+                assertThat(statusCode).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+            }
         });
-        // TOO_MANY_REQUESTS
-        ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_A + "/limit", String.class);
-        HttpStatusCode statusCode = response.getStatusCode();
-        log.info("[a] statusCode:{}", statusCode);
-        assertThat(statusCode).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
-        // OK
-        TimeUnit.MICROSECONDS.sleep(100);
-        response = restTemplate.getForEntity("/" + BACKEND_A + "/limit", String.class);
-        statusCode = response.getStatusCode();
-        log.info("[b] statusCode:{}", statusCode);
-        assertThat(statusCode).isEqualTo(HttpStatus.OK);
     }
 
     private void produceFailure(String backend) {

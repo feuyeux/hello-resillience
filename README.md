@@ -46,4 +46,6 @@ https://github.com/resilience4j/resilience4j-spring-boot3-demo
 
 ```sh
 mvn test -Dtest=HelloResilienceApplicationTests#shouldOpenBackendACircuitBreaker
+# ratelimiter
+mvn test -Dtest=HelloResilienceApplicationTests#rateLimiting
 ```
