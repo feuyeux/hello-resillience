@@ -11,12 +11,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.feuyeux.resilience.service.BackendABackendService.BACKEND_A;
@@ -85,6 +87,7 @@ public class HelloResilienceApplicationTests {
         checkHealthStatus(BACKEND_B, CircuitBreaker.State.CLOSED);
     }
 
+    // Retry Test
     @Test
     public void backendAshouldRetryThreeTimes() {
         // When
@@ -117,6 +120,29 @@ public class HelloResilienceApplicationTests {
         produceSuccess(BACKEND_B);
 
         checkMetrics(SUCCESS_WITHOUT_RETRY, BACKEND_B, currentCount + 1);
+    }
+
+    // Limit Test
+    @Test
+    public void rateLimiting() throws InterruptedException {
+        TimeUnit.MICROSECONDS.sleep(100);
+        Stream.rangeClosed(1, 5).forEach((count) -> {
+            ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_A + "/limit", String.class);
+            HttpStatusCode statusCode = response.getStatusCode();
+            String body = response.getBody();
+            log.info("[{}] statusCode:{},body:{}", count, statusCode, body);
+        });
+        // TOO_MANY_REQUESTS
+        ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_A + "/limit", String.class);
+        HttpStatusCode statusCode = response.getStatusCode();
+        log.info("[a] statusCode:{}", statusCode);
+        assertThat(statusCode).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+        // OK
+        TimeUnit.MICROSECONDS.sleep(100);
+        response = restTemplate.getForEntity("/" + BACKEND_A + "/limit", String.class);
+        statusCode = response.getStatusCode();
+        log.info("[b] statusCode:{}", statusCode);
+        assertThat(statusCode).isEqualTo(HttpStatus.OK);
     }
 
     private void produceFailure(String backend) {
