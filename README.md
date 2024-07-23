@@ -32,3 +32,7 @@ Microservices Resilience Patterns
 ```
 
 https://github.com/resilience4j/resilience4j-spring-boot3-demo
+
+```sh
+mvn test -Dtest=HelloResilienceApplicationTests#shouldOpenBackendACircuitBreaker
+```

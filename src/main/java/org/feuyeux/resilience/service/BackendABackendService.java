@@ -26,7 +26,7 @@ import static io.github.resilience4j.bulkhead.annotation.Bulkhead.Type;
 @Component(value = "backendAService")
 public class BackendABackendService implements BackendService {
 
-    private static final String BACKEND_A = "backendA";
+    public static final String BACKEND_A = "backendA";
 
     @Override
     @CircuitBreaker(name = BACKEND_A)

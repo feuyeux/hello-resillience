@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 @Component(value = "backendBService")
 public class BackendBBackendService implements BackendService {
 
-    private static final String BACKEND_B = "backendB";
+    public static final String BACKEND_B = "backendB";
 
     @Override
     public String failure() {
