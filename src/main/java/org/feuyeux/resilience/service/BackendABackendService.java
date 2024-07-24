@@ -69,15 +69,8 @@ public class BackendABackendService implements BackendService {
 
     @Override
     @Bulkhead(name = BACKEND_A, type = Type.THREADPOOL)
-    @TimeLimiter(name = BACKEND_A)
-    @CircuitBreaker(name = BACKEND_A)
-    @Retry(name = BACKEND_A)
     public CompletableFuture<String> futureSuccess() {
-        try {
-            TimeUnit.MICROSECONDS.sleep(1000);
-        } catch (InterruptedException e) {
-            log.error("", e);
-        }
+        Try.run(() -> Thread.sleep(5000));
         return CompletableFuture.completedFuture("Hello World from backend A");
     }
 

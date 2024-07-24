@@ -38,6 +38,7 @@ public class BackendBBackendService implements BackendService {
 
     @Override
     public CompletableFuture<String> futureSuccess() {
+        Try.run(() -> Thread.sleep(2000));
         return CompletableFuture.completedFuture("Hello World from backend B");
     }
 

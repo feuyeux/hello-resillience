@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.feuyeux.resilience.service.BackendABackendService.BACKEND_A;
@@ -122,27 +123,36 @@ public class HelloResilienceApplicationTests {
     // Bulkhead Test
     @Test
     public void testBulkhead() {
+        AtomicInteger num = new AtomicInteger();
         Stream.rangeClosed(1, 5).toJavaParallelStream().forEach((count) -> {
             ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_B + "/futureSuccess", String.class);
             HttpStatusCode statusCode = response.getStatusCode();
+            int actual = num.incrementAndGet();
             if (statusCode == HttpStatus.OK) {
                 String body = response.getBody();
-                log.info("<B{}> statusCode:{},body:{}", count, statusCode, body);
+                log.info("<B{}|{}> statusCode:{},body:{}", count, actual, statusCode, body);
             } else {
-                log.info("<B{}> statusCode:{}", count, statusCode);
+                // 3 + 1
+                assertThat(actual).isGreaterThan(4);
+                log.info("<B{}|{}> statusCode:{}", count, actual, statusCode);
             }
         });
         log.info("~");
-        Stream.rangeClosed(1, 30).toJavaParallelStream().forEach((count) -> {
+        AtomicInteger num2 = new AtomicInteger();
+        Stream.rangeClosed(1, 10).toJavaParallelStream().forEach((count) -> {
             ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_A + "/futureSuccess", String.class);
             HttpStatusCode statusCode = response.getStatusCode();
             if (statusCode == HttpStatus.OK) {
                 String body = response.getBody();
                 log.info("<A{}> statusCode:{},body:{}", count, statusCode, body);
+                num2.incrementAndGet();
             } else {
                 log.info("<A{}> statusCode:{}", count, statusCode);
             }
         });
+        int actual = num2.get();
+        // 4 + 2
+        assertThat(actual).isEqualTo(6);
     }
 
     private void produceFailure(String backend) {

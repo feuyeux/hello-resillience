@@ -85,15 +85,15 @@ resilience4j.bulkhead:
 resilience4j.thread-pool-bulkhead:
   configs:
     default:
-      maxThreadPoolSize: 2
-      coreThreadPoolSize: 2
+      maxThreadPoolSize: 4
+      coreThreadPoolSize: 3
       queueCapacity: 2
   instances:
     backendA:
       baseConfig: default
     backendB:
-      maxThreadPoolSize: 2
-      coreThreadPoolSize: 1
+      maxThreadPoolSize: 3
+      coreThreadPoolSize: 2
       queueCapacity: 1
 
 # https://resilience4j.readme.io/docs/ratelimiter
