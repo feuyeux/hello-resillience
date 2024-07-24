@@ -51,15 +51,11 @@ public class HelloResilienceApplicationTests {
 
     // CircuitBreaker Test
     @Test
-    public void shouldOpenBackendACircuitBreaker() {
+    public void testCircuitBreaker() {
         // When
         Stream.rangeClosed(1, 2).forEach((count) -> produceFailure(BACKEND_A));
         // Then
         checkHealthStatus(BACKEND_A, CircuitBreaker.State.OPEN);
-    }
-
-    @Test
-    public void shouldOpenBackendBCircuitBreaker() {
         // When
         Stream.rangeClosed(1, 4).forEach((count) -> produceFailure(BACKEND_B));
         // Then
@@ -67,64 +63,47 @@ public class HelloResilienceApplicationTests {
     }
 
     @Test
-    public void shouldCloseBackendACircuitBreaker() {
+    public void testCircuitBreaker2() {
         transitionToOpenState(BACKEND_A);
         circuitBreakerRegistry.circuitBreaker(BACKEND_A).transitionToHalfOpenState();
         // When
         Stream.rangeClosed(1, 3).forEach((count) -> produceSuccess(BACKEND_A));
         // Then
         checkHealthStatus(BACKEND_A, CircuitBreaker.State.CLOSED);
-    }
-
-    @Test
-    public void shouldCloseBackendBCircuitBreaker() {
+        //
         transitionToOpenState(BACKEND_B);
         circuitBreakerRegistry.circuitBreaker(BACKEND_B).transitionToHalfOpenState();
         // When
         Stream.rangeClosed(1, 3).forEach((count) -> produceSuccess(BACKEND_B));
-
         // Then
         checkHealthStatus(BACKEND_B, CircuitBreaker.State.CLOSED);
     }
 
     // Retry Test
     @Test
-    public void backendAshouldRetryThreeTimes() {
+    public void testRetry() {
         // When
         float currentCount = getCurrentCount(FAILED_WITH_RETRY, BACKEND_A);
         produceFailure(BACKEND_A);
-
         checkMetrics(FAILED_WITH_RETRY, BACKEND_A, currentCount + 1);
-    }
 
-    @Test
-    public void backendBshouldRetryThreeTimes() {
         // When
-        float currentCount = getCurrentCount(FAILED_WITH_RETRY, BACKEND_B);
+        currentCount = getCurrentCount(FAILED_WITH_RETRY, BACKEND_B);
         produceFailure(BACKEND_B);
-
         checkMetrics(FAILED_WITH_RETRY, BACKEND_B, currentCount + 1);
-    }
 
-    @Test
-    public void backendAshouldSucceedWithoutRetry() {
-        float currentCount = getCurrentCount(SUCCESS_WITHOUT_RETRY, BACKEND_A);
+        currentCount = getCurrentCount(SUCCESS_WITHOUT_RETRY, BACKEND_A);
         produceSuccess(BACKEND_A);
-
         checkMetrics(SUCCESS_WITHOUT_RETRY, BACKEND_A, currentCount + 1);
-    }
 
-    @Test
-    public void backendBshouldSucceedWithoutRetry() {
-        float currentCount = getCurrentCount(SUCCESS_WITHOUT_RETRY, BACKEND_B);
+        currentCount = getCurrentCount(SUCCESS_WITHOUT_RETRY, BACKEND_B);
         produceSuccess(BACKEND_B);
-
         checkMetrics(SUCCESS_WITHOUT_RETRY, BACKEND_B, currentCount + 1);
     }
 
     // Limit Test
     @Test
-    public void rateLimiting() throws InterruptedException {
+    public void testRateLimiting() throws InterruptedException {
         TimeUnit.MICROSECONDS.sleep(100);
         Stream.rangeClosed(1, 20).forEach((count) -> {
             ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_A + "/limit", String.class);
@@ -136,6 +115,32 @@ public class HelloResilienceApplicationTests {
             }
             if (count == 12) {
                 assertThat(statusCode).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+            }
+        });
+    }
+
+    // Bulkhead Test
+    @Test
+    public void testBulkhead() {
+        Stream.rangeClosed(1, 5).toJavaParallelStream().forEach((count) -> {
+            ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_B + "/futureSuccess", String.class);
+            HttpStatusCode statusCode = response.getStatusCode();
+            if (statusCode == HttpStatus.OK) {
+                String body = response.getBody();
+                log.info("<B{}> statusCode:{},body:{}", count, statusCode, body);
+            } else {
+                log.info("<B{}> statusCode:{}", count, statusCode);
+            }
+        });
+        log.info("~");
+        Stream.rangeClosed(1, 30).toJavaParallelStream().forEach((count) -> {
+            ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_A + "/futureSuccess", String.class);
+            HttpStatusCode statusCode = response.getStatusCode();
+            if (statusCode == HttpStatus.OK) {
+                String body = response.getBody();
+                log.info("<A{}> statusCode:{},body:{}", count, statusCode, body);
+            } else {
+                log.info("<A{}> statusCode:{}", count, statusCode);
             }
         });
     }

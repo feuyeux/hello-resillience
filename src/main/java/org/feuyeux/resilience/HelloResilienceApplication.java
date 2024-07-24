@@ -38,46 +38,4 @@ public class HelloResilienceApplication {
     public CircuitBreakerConfigCustomizer testCustomizer() {
         return CircuitBreakerConfigCustomizer.of(BACKEND_A, builder -> builder.slidingWindowSize(100));
     }
-
-    @Bean
-    public RegistryEventConsumer<CircuitBreaker> myRegistryEventConsumer() {
-
-        return new RegistryEventConsumer<CircuitBreaker>() {
-            @Override
-            public void onEntryAddedEvent(EntryAddedEvent<CircuitBreaker> entryAddedEvent) {
-                entryAddedEvent.getAddedEntry().getEventPublisher().onEvent(event -> log.info(event.toString()));
-            }
-
-            @Override
-            public void onEntryRemovedEvent(EntryRemovedEvent<CircuitBreaker> entryRemoveEvent) {
-
-            }
-
-            @Override
-            public void onEntryReplacedEvent(EntryReplacedEvent<CircuitBreaker> entryReplacedEvent) {
-
-            }
-        };
-    }
-
-    @Bean
-    public RegistryEventConsumer<Retry> myRetryRegistryEventConsumer() {
-
-        return new RegistryEventConsumer<Retry>() {
-            @Override
-            public void onEntryAddedEvent(EntryAddedEvent<Retry> entryAddedEvent) {
-                entryAddedEvent.getAddedEntry().getEventPublisher().onEvent(event -> log.info(event.toString()));
-            }
-
-            @Override
-            public void onEntryRemovedEvent(EntryRemovedEvent<Retry> entryRemoveEvent) {
-
-            }
-
-            @Override
-            public void onEntryReplacedEvent(EntryReplacedEvent<Retry> entryReplacedEvent) {
-
-            }
-        };
-    }
 }

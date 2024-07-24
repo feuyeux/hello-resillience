@@ -8,6 +8,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import io.vavr.control.Try;
+import lombok.extern.slf4j.Slf4j;
 import org.feuyeux.resilience.exception.BusinessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ import org.springframework.web.client.HttpServerErrorException;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static io.github.resilience4j.bulkhead.annotation.Bulkhead.Type;
@@ -24,6 +26,7 @@ import static io.github.resilience4j.bulkhead.annotation.Bulkhead.Type;
  * This Service shows how to use the CircuitBreaker annotation.
  */
 @Component(value = "backendAService")
+@Slf4j
 public class BackendABackendService implements BackendService {
 
     public static final String BACKEND_A = "backendA";
@@ -70,6 +73,11 @@ public class BackendABackendService implements BackendService {
     @CircuitBreaker(name = BACKEND_A)
     @Retry(name = BACKEND_A)
     public CompletableFuture<String> futureSuccess() {
+        try {
+            TimeUnit.MICROSECONDS.sleep(1000);
+        } catch (InterruptedException e) {
+            log.error("", e);
+        }
         return CompletableFuture.completedFuture("Hello World from backend A");
     }
 
