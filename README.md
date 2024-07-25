@@ -49,7 +49,8 @@ https://github.com/resilience4j/resilience4j-spring-boot3-demo
 mvn test -Dtest=HelloResilienceApplicationTests#testCircuitBreaker
 # Retry
 mvn test -Dtest=HelloResilienceApplicationTests#testRetry
-# ratelimiter
+# Rate limiter
 mvn test -Dtest=HelloResilienceApplicationTests#testRateLimiting
+# Bulkhead
 mvn test -Dtest=HelloResilienceApplicationTests#testBulkhead
 ```

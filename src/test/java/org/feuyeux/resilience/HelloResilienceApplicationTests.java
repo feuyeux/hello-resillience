@@ -1,5 +1,9 @@
 package org.feuyeux.resilience;
 
+import io.github.resilience4j.bulkhead.BulkheadFullException;
+import io.github.resilience4j.bulkhead.BulkheadRegistry;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
+import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
@@ -18,8 +22,9 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.feuyeux.resilience.service.BackendABackendService.BACKEND_A;
@@ -120,8 +125,34 @@ public class HelloResilienceApplicationTests {
         });
     }
 
+    @Autowired
+    private BulkheadRegistry bulkheadRegistry;
+
     // Bulkhead Test
     @Test
+    public void testBulkhead0() {
+        ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
+                .maxThreadPoolSize(2)
+                .coreThreadPoolSize(1)
+                .queueCapacity(1)
+                .build();
+        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("backendX", config);
+        Supplier<CompletionStage<String>> supplier = ThreadPoolBulkhead.decorateSupplier(bulkhead, ()->hello());
+        Stream.rangeClosed(1, 20).toJavaParallelStream().forEach((count) -> {
+            try {
+                CompletableFuture<String> completableFuture = supplier.get().toCompletableFuture();
+                String result = completableFuture.get(5, TimeUnit.SECONDS);
+                log.info("result:{}", result);
+            } catch (InterruptedException | ExecutionException | TimeoutException | BulkheadFullException e) {
+                log.error(">>{}<<", e.getMessage());
+            }
+        });
+    }
+
+    public static String hello() {
+        return "Hello";
+    }
+
     public void testBulkhead() {
         AtomicInteger num = new AtomicInteger();
         Stream.rangeClosed(1, 5).toJavaParallelStream().forEach((count) -> {
