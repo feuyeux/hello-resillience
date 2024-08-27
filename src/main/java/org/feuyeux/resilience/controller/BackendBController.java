@@ -70,6 +70,12 @@ public class BackendBController {
         return execute(businessBBackendService::success);
     }
 
+    @GetMapping("successWithRateLimiter")
+    public String successWithRateLimiter() {
+        return executeRateLimiter(businessBBackendService::success);
+    }
+
+
     @GetMapping("successException")
     public String successException() {
         return execute(businessBBackendService::successException);
@@ -116,6 +122,12 @@ public class BackendBController {
                 .withCircuitBreaker(circuitBreaker)
                 .withBulkhead(bulkhead)
                 .withRetry(retry)
+                .get();
+    }
+
+    private <T> T executeRateLimiter(Supplier<T> supplier) {
+        return Decorators.ofSupplier(supplier)
+                .withRateLimiter(rateLimiter)
                 .get();
     }
 

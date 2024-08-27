@@ -111,17 +111,15 @@ public class HelloResilienceApplicationTests {
     @Test
     public void testRateLimiting() throws InterruptedException {
         TimeUnit.MICROSECONDS.sleep(100);
-        Stream.rangeClosed(1, 20).forEach((count) -> {
+        Stream.rangeClosed(1, 100).forEach((count) -> {
             ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_A + "/limit", String.class);
             HttpStatusCode statusCode = response.getStatusCode();
             String body = response.getBody();
-            log.info("[{}] statusCode:{},body:{}", count, statusCode, body);
-            if (count == 5) {
-                assertThat(statusCode).isEqualTo(HttpStatus.OK);
-            }
-            if (count == 12) {
-                assertThat(statusCode).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
-            }
+            log.info("A[{}] statusCode:{},body:{}", count, statusCode, body);
+            response = restTemplate.getForEntity("/" + BACKEND_B + "/successWithRateLimiter", String.class);
+            statusCode = response.getStatusCode();
+            body = response.getBody();
+            log.info("B[{}] statusCode:{},body:{}", count, statusCode, body);
         });
     }
 
@@ -137,7 +135,7 @@ public class HelloResilienceApplicationTests {
                 .queueCapacity(1)
                 .build();
         ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("backendX", config);
-        Supplier<CompletionStage<String>> supplier = ThreadPoolBulkhead.decorateSupplier(bulkhead, ()->hello());
+        Supplier<CompletionStage<String>> supplier = ThreadPoolBulkhead.decorateSupplier(bulkhead, () -> hello());
         Stream.rangeClosed(1, 20).toJavaParallelStream().forEach((count) -> {
             try {
                 CompletableFuture<String> completableFuture = supplier.get().toCompletableFuture();

@@ -110,9 +110,10 @@ resilience4j.ratelimiter:
     backendA:
       baseConfig: default
     backendB:
+      baseConfig: default
       limitForPeriod: 6
       limitRefreshPeriod: 500ms
-      timeoutDuration: 3s
+      timeoutDuration: 100ms
 
 resilience4j.timelimiter:
   configs:
