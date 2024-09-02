@@ -25,6 +25,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.feuyeux.resilience.service.BackendABackendService.BACKEND_A;
@@ -123,65 +124,35 @@ public class HelloResilienceApplicationTests {
         });
     }
 
-    @Autowired
-    private BulkheadRegistry bulkheadRegistry;
 
-    // Bulkhead Test
     @Test
-    public void testBulkhead0() {
-        ThreadPoolBulkheadConfig config = ThreadPoolBulkheadConfig.custom()
-                .maxThreadPoolSize(2)
-                .coreThreadPoolSize(1)
-                .queueCapacity(1)
-                .build();
-        ThreadPoolBulkhead bulkhead = ThreadPoolBulkhead.of("backendX", config);
-        Supplier<CompletionStage<String>> supplier = ThreadPoolBulkhead.decorateSupplier(bulkhead, () -> hello());
-        Stream.rangeClosed(1, 20).toJavaParallelStream().forEach((count) -> {
-            try {
-                CompletableFuture<String> completableFuture = supplier.get().toCompletableFuture();
-                String result = completableFuture.get(5, TimeUnit.SECONDS);
-                log.info("result:{}", result);
-            } catch (InterruptedException | ExecutionException | TimeoutException | BulkheadFullException e) {
-                log.error(">>{}<<", e.getMessage());
-            }
-        });
-    }
-
-    public static String hello() {
-        return "Hello";
-    }
-
-    public void testBulkhead() {
-        AtomicInteger num = new AtomicInteger();
-        Stream.rangeClosed(1, 5).toJavaParallelStream().forEach((count) -> {
-            ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_B + "/futureSuccess", String.class);
+    public void testBulkHead() throws InterruptedException {
+        TimeUnit.MICROSECONDS.sleep(100);
+        IntStream.rangeClosed(1, 10).parallel().forEach((count) -> {
+            ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_B + "/bulkhead", String.class);
             HttpStatusCode statusCode = response.getStatusCode();
-            int actual = num.incrementAndGet();
             if (statusCode == HttpStatus.OK) {
                 String body = response.getBody();
-                log.info("<B{}|{}> statusCode:{},body:{}", count, actual, statusCode, body);
+                log.info("BulkHead statusCode:{},body:{}", statusCode, body);
             } else {
-                // 3 + 1
-                assertThat(actual).isGreaterThan(4);
-                log.info("<B{}|{}> statusCode:{}", count, actual, statusCode);
+                log.error("BulkHead statusCode:{}", statusCode);
             }
         });
-        log.info("~");
-        AtomicInteger num2 = new AtomicInteger();
+    }
+
+    @Test
+    public void testBulkHeadAsync() throws InterruptedException {
+        TimeUnit.MICROSECONDS.sleep(100);
         Stream.rangeClosed(1, 10).toJavaParallelStream().forEach((count) -> {
-            ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_A + "/futureSuccess", String.class);
+            ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_B + "/bulkheadAsync", String.class);
             HttpStatusCode statusCode = response.getStatusCode();
             if (statusCode == HttpStatus.OK) {
                 String body = response.getBody();
-                log.info("<A{}> statusCode:{},body:{}", count, statusCode, body);
-                num2.incrementAndGet();
+                log.info("BulkHeadAsync statusCode:{},body:{}", statusCode, body);
             } else {
-                log.info("<A{}> statusCode:{}", count, statusCode);
+                log.error("BulkHeadAsync statusCode:{}", statusCode);
             }
         });
-        int actual = num2.get();
-        // 4 + 2
-        assertThat(actual).isEqualTo(6);
     }
 
     private void produceFailure(String backend) {

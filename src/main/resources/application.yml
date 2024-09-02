@@ -79,8 +79,8 @@ resilience4j.bulkhead:
     backendA:
       maxConcurrentCalls: 10
     backendB:
-      maxWaitDuration: 10ms
-      maxConcurrentCalls: 20
+      maxWaitDuration: 500ms
+      maxConcurrentCalls: 2
 
 resilience4j.thread-pool-bulkhead:
   configs:

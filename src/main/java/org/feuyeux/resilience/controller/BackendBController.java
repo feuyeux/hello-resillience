@@ -18,10 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -33,7 +30,7 @@ import static java.util.Arrays.asList;
 public class BackendBController {
 
     private static final String BACKEND_B = "backendB";
-    private final BackendService businessBBackendService;
+    private final BackendService businessBackendService;
     private final CircuitBreaker circuitBreaker;
     private final Bulkhead bulkhead;
     private final ThreadPoolBulkhead threadPoolBulkhead;
@@ -43,14 +40,14 @@ public class BackendBController {
     private final ScheduledExecutorService scheduledExecutorService;
 
     public BackendBController(
-            @Qualifier("backendBService") BackendService businessBBackendService,
+            @Qualifier("backendBService") BackendService businessBackendService,
             CircuitBreakerRegistry circuitBreakerRegistry,
             ThreadPoolBulkheadRegistry threadPoolBulkheadRegistry,
             BulkheadRegistry bulkheadRegistry,
             RetryRegistry retryRegistry,
             RateLimiterRegistry rateLimiterRegistry,
             TimeLimiterRegistry timeLimiterRegistry) {
-        this.businessBBackendService = businessBBackendService;
+        this.businessBackendService = businessBackendService;
         this.circuitBreaker = circuitBreakerRegistry.circuitBreaker(BACKEND_B);
         this.bulkhead = bulkheadRegistry.bulkhead(BACKEND_B);
         this.threadPoolBulkhead = threadPoolBulkheadRegistry.bulkhead(BACKEND_B);
@@ -60,42 +57,52 @@ public class BackendBController {
         this.scheduledExecutorService = Executors.newScheduledThreadPool(3);
     }
 
+    @GetMapping("bulkhead")
+    public String bulkhead(){
+        return executeWithBulkHead(businessBackendService::success);
+    }
+
+    @GetMapping("bulkheadAsync")
+    public CompletableFuture<String> bulkheadAsync() {
+        return executeWithAsyncBulkHead(businessBackendService::success);
+    }
+
     @GetMapping("failure")
     public String failure() {
-        return execute(businessBBackendService::failure);
+        return execute(businessBackendService::failure);
     }
 
     @GetMapping("success")
     public String success() {
-        return execute(businessBBackendService::success);
+        return execute(businessBackendService::success);
     }
 
     @GetMapping("successWithRateLimiter")
     public String successWithRateLimiter() {
-        return executeRateLimiter(businessBBackendService::success);
+        return executeRateLimiter(businessBackendService::success);
     }
 
 
     @GetMapping("successException")
     public String successException() {
-        return execute(businessBBackendService::successException);
+        return execute(businessBackendService::successException);
     }
 
     @GetMapping("ignore")
     public String ignore() {
-        return Decorators.ofSupplier(businessBBackendService::ignoreException)
+        return Decorators.ofSupplier(businessBackendService::ignoreException)
                 .withCircuitBreaker(circuitBreaker)
                 .withBulkhead(bulkhead).get();
     }
 
     @GetMapping("futureFailure")
     public CompletableFuture<String> futureFailure() {
-        return executeAsync(businessBBackendService::failure);
+        return executeAsync(businessBackendService::failure);
     }
 
     @GetMapping("futureSuccess")
     public CompletableFuture<String> futureSuccess() {
-        return executeAsync(businessBBackendService::success);
+        return executeAsync(businessBackendService::success);
     }
 
     @GetMapping("futureTimeout")
@@ -105,7 +112,7 @@ public class BackendBController {
 
     @GetMapping("fallback")
     public String failureWithFallback() {
-        return businessBBackendService.failureWithFallback();
+        return businessBackendService.failureWithFallback();
     }
 
     private String timeout() {
@@ -123,6 +130,19 @@ public class BackendBController {
                 .withBulkhead(bulkhead)
                 .withRetry(retry)
                 .get();
+    }
+
+    private <T> T executeWithBulkHead(Supplier<T> supplier) {
+        return Decorators.ofSupplier(supplier)
+                .withBulkhead(bulkhead)
+                .get();
+    }
+
+    private <T> CompletableFuture<T> executeWithAsyncBulkHead(Supplier<T> supplier) {
+        return Decorators.ofSupplier(supplier)
+                .withThreadPoolBulkhead(threadPoolBulkhead)
+                .get()
+                .toCompletableFuture();
     }
 
     private <T> T executeRateLimiter(Supplier<T> supplier) {

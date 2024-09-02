@@ -10,6 +10,7 @@ import org.springframework.web.client.HttpServerErrorException;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Component(value = "backendBService")
 public class BackendBBackendService implements BackendService {
@@ -23,6 +24,11 @@ public class BackendBBackendService implements BackendService {
 
     @Override
     public String success() {
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         return "Hello World from backend B";
     }
 
@@ -38,6 +44,7 @@ public class BackendBBackendService implements BackendService {
 
     @Override
     public CompletableFuture<String> futureSuccess() {
+
         Try.run(() -> Thread.sleep(2000));
         return CompletableFuture.completedFuture("Hello World from backend B");
     }
@@ -63,6 +70,4 @@ public class BackendBBackendService implements BackendService {
     private String fallback(Throwable ex) {
         return "Recovered: " + ex.toString();
     }
-
-
 }
