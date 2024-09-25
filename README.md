@@ -12,38 +12,6 @@ Microservices Resilience Patterns
 | **Cache**           | memorizes a successful result               | Some proportion of requests may be similar.                                               | [documentation](https://resilience4j.readme.io/docs/cache)                                                                                                                                                                                                                                                      |
 | **Fallback**        | provides an alternative result for failures | Things will still fail - plan what you will do when that happens.                         | [Try::recover](https://github.com/resilience4j/resilience4j?tab=readme-ov-file#circuitbreaker-retry-fallback), [Spring](https://resilience4j.readme.io/docs/getting-started-3#section-annotations), [Feign](https://resilience4j.readme.io/docs/feign)                                                          |
 
-
-```xml
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-circuitbreaker</artifactId>
-    <version>${resilience4jVersion}</version>
-</dependency>
-```
-```xml
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-ratelimiter</artifactId>
-    <version>${resilience4jVersion}</version>
-</dependency>
-```
-```xml
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-retry</artifactId>
-    <version>${resilience4jVersion}</version>
-</dependency>
-```
-```xml
-<dependency>
-    <groupId>io.github.resilience4j</groupId>
-    <artifactId>resilience4j-bulkhead</artifactId>
-    <version>${resilience4jVersion}</version>
-</dependency>
-```
-
-https://github.com/resilience4j/resilience4j-spring-boot3-demo
-
 ```sh
 # Circuit Breaker
 mvn test -Dtest=HelloResilienceApplicationTests#testCircuitBreaker
@@ -54,3 +22,39 @@ mvn test -Dtest=HelloResilienceApplicationTests#testRateLimiting
 # Bulkhead
 mvn test -Dtest=HelloResilienceApplicationTests#testBulkhead
 ```
+
+```xml
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-circuitbreaker</artifactId>
+    <version>${resilience4jVersion}</version>
+</dependency>
+```
+
+```xml
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-ratelimiter</artifactId>
+    <version>${resilience4jVersion}</version>
+</dependency>
+```
+
+```xml
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-retry</artifactId>
+    <version>${resilience4jVersion}</version>
+</dependency>
+```
+
+```xml
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-bulkhead</artifactId>
+    <version>${resilience4jVersion}</version>
+</dependency>
+```
+
+<https://github.com/resilience4j/resilience4j-spring-boot3-demo>
+
+

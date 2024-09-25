@@ -9,6 +9,12 @@
     <properties>
         <resilience4j.version>2.2.0</resilience4j.version>
         <spring-boot.version>3.3.4</spring-boot.version>
+        <micrometer.version>1.13.3</micrometer.version>
+        <vavr.version>0.10.4</vavr.version>
+        <lombok.version>1.18.34</lombok.version>
+        <byte-buddy.version>1.15.1</byte-buddy.version>
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.5.0</maven-surefire-plugin.version>
     </properties>
 
     <dependencies>
@@ -69,21 +75,21 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
-            <version>1.13.3</version>
+            <version>${micrometer.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/io.vavr/vavr -->
         <dependency>
             <groupId>io.vavr</groupId>
             <artifactId>vavr</artifactId>
-            <version>0.10.4</version>
+            <version>${vavr.version}</version>
         </dependency>
 
         <!-- provided -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.34</version>
+            <version>${lombok.version}</version>
             <optional>true</optional>
         </dependency>
         <!-- test -->
@@ -119,13 +125,13 @@
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
-            <version>1.15.1</version>
+            <version>${byte-buddy.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy-agent</artifactId>
-            <version>1.15.1</version>
+            <version>${byte-buddy.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -135,7 +141,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
+                <version>${maven-compiler-plugin.version}</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
                     <release>21</release>
@@ -158,7 +164,7 @@
                 </executions>
             </plugin>
             <!--
-            WARNING: A Java agent has been loaded dynamically (/Users/hanl5/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.18/byte-buddy-agent-1.14.18.jar)
+            WARNING: A Java agent has been loaded dynamically (.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.18/byte-buddy-agent-1.14.18.jar)
             WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
             WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
             WARNING: Dynamic loading of agents will be disallowed by default in a future release
@@ -168,7 +174,7 @@
                 <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-surefire-plugin -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>${maven-surefire-plugin.version}</version>
                 <configuration>
                     <argLine>-XX:+EnableDynamicAgentLoading</argLine>
                 </configuration>

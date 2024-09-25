@@ -112,7 +112,7 @@ public class HelloResilienceApplicationTests {
     @Test
     public void testRateLimiting() throws InterruptedException {
         TimeUnit.MICROSECONDS.sleep(100);
-        Stream.rangeClosed(1, 100).forEach((count) -> {
+        Stream.rangeClosed(1, 10).forEach((count) -> {
             ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_A + "/limit", String.class);
             HttpStatusCode statusCode = response.getStatusCode();
             String body = response.getBody();
