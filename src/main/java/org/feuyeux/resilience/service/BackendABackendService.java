@@ -16,9 +16,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 import static io.github.resilience4j.bulkhead.annotation.Bulkhead.Type;
 
@@ -85,13 +83,26 @@ public class BackendABackendService implements BackendService {
         return future;
     }
 
-    @Override
+    @TimeLimiter(name = BACKEND_A)
+    @CircuitBreaker(name = BACKEND_A, fallbackMethod = "futureFallback")
     @Bulkhead(name = BACKEND_A, type = Type.THREADPOOL)
+    public CompletableFuture<String> futureTimeout1() {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException ignored) {}
+        return CompletableFuture.completedFuture("Hello World from backend A");
+    }
+
+    @Override
     @TimeLimiter(name = BACKEND_A)
     @CircuitBreaker(name = BACKEND_A, fallbackMethod = "futureFallback")
     public CompletableFuture<String> futureTimeout() {
-        Try.run(() -> Thread.sleep(5000));
-        return CompletableFuture.completedFuture("Hello World from backend A");
+        return CompletableFuture.supplyAsync(()->{
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException ignored) {}
+            return "Hello World from backend A";
+        }, Executors.newVirtualThreadPerTaskExecutor());
     }
 
     private String fallback(HttpServerErrorException ex) {

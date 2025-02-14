@@ -1,9 +1,5 @@
 package org.feuyeux.resilience;
 
-import io.github.resilience4j.bulkhead.BulkheadFullException;
-import io.github.resilience4j.bulkhead.BulkheadRegistry;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkhead;
-import io.github.resilience4j.bulkhead.ThreadPoolBulkheadConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
@@ -22,9 +18,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -152,6 +146,17 @@ public class HelloResilienceApplicationTests {
             } else {
                 log.error("BulkHeadAsync statusCode:{}", statusCode);
             }
+        });
+    }
+
+    @Test
+    public void testTimeout() throws InterruptedException {
+        TimeUnit.MICROSECONDS.sleep(100);
+        Stream.rangeClosed(1, 10).toJavaParallelStream().forEach((count) -> {
+            ResponseEntity<String> response = restTemplate.getForEntity("/" + BACKEND_A + "/futureTimeout", String.class);
+            HttpStatusCode statusCode = response.getStatusCode();
+            String body = response.getBody();
+            log.info("testTimeout body:{}", body);
         });
     }
 
